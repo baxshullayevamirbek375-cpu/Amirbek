@@ -52,6 +52,7 @@ export default function Admin() {
                 <td>{formatMoney(p.price)}</td>
                 <td>
                   <input
+                    key={p.stock}
                     className="stock-input"
                     step="1"
                     type="number"
