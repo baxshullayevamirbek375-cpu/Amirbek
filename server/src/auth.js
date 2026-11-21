@@ -1,6 +1,18 @@
+const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
+function loadSecret() {
+  if (process.env.JWT_SECRET) return process.env.JWT_SECRET;
+  const file = path.join(__dirname, '..', '.jwt-secret');
+  if (fs.existsSync(file)) return fs.readFileSync(file, 'utf8').trim();
+  const secret = crypto.randomBytes(48).toString('hex');
+  fs.writeFileSync(file, secret, { mode: 0o600 });
+  return secret;
+}
+
+const JWT_SECRET = loadSecret();
 
 function signToken(user) {
   return jwt.sign({ id: user.id, name: user.name, role: user.role }, JWT_SECRET, { expiresIn: '7d' });

@@ -34,7 +34,7 @@ npm run build   # client/dist yaratiladi
 npm start       # Express API + frontendni 4000-portda beradi
 ```
 
-Muhit o'zgaruvchilari (ixtiyoriy): `PORT`, `JWT_SECRET`, `DB_PATH`.
+Muhit o'zgaruvchilari (ixtiyoriy): `PORT`, `JWT_SECRET` (berilmasa tasodifiy kalit `server/.jwt-secret` ga saqlanadi), `DB_PATH`.
 
 ## Tuzilma
 
