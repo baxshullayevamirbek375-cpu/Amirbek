@@ -6,10 +6,14 @@ const jwt = require('jsonwebtoken');
 function loadSecret() {
   if (process.env.JWT_SECRET) return process.env.JWT_SECRET;
   const file = path.join(__dirname, '..', '.jwt-secret');
-  if (fs.existsSync(file)) return fs.readFileSync(file, 'utf8').trim();
-  const secret = crypto.randomBytes(48).toString('hex');
-  fs.writeFileSync(file, secret, { mode: 0o600 });
-  return secret;
+  try {
+    const secret = crypto.randomBytes(48).toString('hex');
+    fs.writeFileSync(file, secret, { mode: 0o600, flag: 'wx' });
+    return secret;
+  } catch (err) {
+    if (err.code !== 'EEXIST') throw err;
+    return fs.readFileSync(file, 'utf8').trim();
+  }
 }
 
 const JWT_SECRET = loadSecret();
