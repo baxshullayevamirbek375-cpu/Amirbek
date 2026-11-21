@@ -80,9 +80,28 @@ router.get('/orders', requireAuth, (req, res) => {
 router.patch('/orders/:id', requireAuth, requireAdmin, (req, res) => {
   const { status } = req.body || {};
   if (!['new', 'shipped', 'delivered', 'cancelled'].includes(status)) return res.status(400).json({ error: "Noto'g'ri holat" });
-  const info = db.prepare('UPDATE orders SET status = ? WHERE id = ?').run(status, req.params.id);
-  if (!info.changes) return res.status(404).json({ error: 'Buyurtma topilmadi' });
-  res.json(withItems(db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id)));
+  const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.params.id);
+  if (!order) return res.status(404).json({ error: 'Buyurtma topilmadi' });
+  const wasCancelled = order.status === 'cancelled';
+  const isCancelled = status === 'cancelled';
+  try {
+    db.transaction(() => {
+      if (wasCancelled !== isCancelled) {
+        const items = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(order.id);
+        for (const it of items) {
+          if (!isCancelled) {
+            const product = db.prepare('SELECT * FROM products WHERE id = ?').get(it.product_id);
+            if (product.stock < it.qty) throw new Error(`"${product.name}" zaxirada yetarli emas`);
+          }
+          db.prepare('UPDATE products SET stock = stock + ? WHERE id = ?').run(isCancelled ? it.qty : -it.qty, it.product_id);
+        }
+      }
+      db.prepare('UPDATE orders SET status = ? WHERE id = ?').run(status, order.id);
+    })();
+  } catch (e) {
+    return res.status(400).json({ error: e.message });
+  }
+  res.json(withItems(db.prepare('SELECT * FROM orders WHERE id = ?').get(order.id)));
 });
 
 module.exports = router;
