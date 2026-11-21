@@ -6,9 +6,12 @@ router.get('/products', (req, res) => {
   res.json(db.prepare('SELECT * FROM products ORDER BY id').all());
 });
 
+const validProduct = ({ name, price, stock }) =>
+  !!String(name ?? '').trim() && Number(price) >= 0 && Number.isInteger(Number(stock)) && Number(stock) >= 0;
+
 router.post('/products', requireAuth, requireAdmin, (req, res) => {
   const { name, description = '', price, image = '📦', stock = 0 } = req.body || {};
-  if (!name?.trim() || !(Number(price) >= 0) || !(Number.isInteger(Number(stock)) && Number(stock) >= 0)) {
+  if (!validProduct({ name, price, stock })) {
     return res.status(400).json({ error: "Nom, narx va zaxirani to'g'ri kiriting" });
   }
   const info = db
@@ -21,8 +24,9 @@ router.patch('/products/:id', requireAuth, requireAdmin, (req, res) => {
   const product = db.prepare('SELECT * FROM products WHERE id = ?').get(req.params.id);
   if (!product) return res.status(404).json({ error: 'Mahsulot topilmadi' });
   const next = { ...product, ...req.body };
+  if (!validProduct(next)) return res.status(400).json({ error: "Nom, narx va zaxirani to'g'ri kiriting" });
   db.prepare('UPDATE products SET name = ?, description = ?, price = ?, image = ?, stock = ? WHERE id = ?').run(
-    next.name, next.description, Number(next.price), next.image, Number(next.stock), product.id,
+    String(next.name).trim(), next.description, Number(next.price), next.image, Number(next.stock), product.id,
   );
   res.json(db.prepare('SELECT * FROM products WHERE id = ?').get(product.id));
 });

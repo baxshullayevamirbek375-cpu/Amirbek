@@ -38,7 +38,7 @@ export default function Admin() {
           <input placeholder="Nomi" value={form.name} onChange={set('name')} required />
           <input placeholder="Tavsif" value={form.description} onChange={set('description')} />
           <input type="number" min="0" placeholder="Narx" value={form.price} onChange={set('price')} required />
-          <input type="number" min="0" placeholder="Zaxira" value={form.stock} onChange={set('stock')} required />
+          <input type="number" min="0" step="1" placeholder="Zaxira" value={form.stock} onChange={set('stock')} required />
           <button className="btn">Qo'shish</button>
         </form>
         {error && <div className="error">{error}</div>}
@@ -53,6 +53,7 @@ export default function Admin() {
                 <td>
                   <input
                     className="stock-input"
+                    step="1"
                     type="number"
                     min="0"
                     defaultValue={p.stock}
