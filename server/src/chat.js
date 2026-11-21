@@ -35,7 +35,8 @@ function setupChat(io) {
       socket.emit('history', recent(room));
     });
 
-    socket.on('message', ({ room, content } = {}) => {
+    socket.on('message', (payload) => {
+      const { room, content } = payload || {};
       const text = String(content || '').trim().slice(0, 1000);
       if (!ROOMS.includes(room) || !text) return;
       const info = db.prepare('INSERT INTO messages (room, user_id, content) VALUES (?, ?, ?)').run(room, socket.user.id, text);
