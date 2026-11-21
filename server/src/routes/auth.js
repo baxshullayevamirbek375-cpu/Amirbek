@@ -23,11 +23,16 @@ router.post('/register', authLimiter, async (req, res) => {
   if (db.prepare('SELECT id FROM users WHERE email = ?').get(normalized)) {
     return res.status(409).json({ error: "Bu email allaqachon ro'yxatdan o'tgan" });
   }
-  const isFirst = db.prepare('SELECT COUNT(*) AS c FROM users').get().c === 0;
-  const info = db
-    .prepare('INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)')
-    .run(name.trim(), normalized, await bcrypt.hash(password, 10), isFirst ? 'admin' : 'user');
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(info.lastInsertRowid);
+  const passwordHash = await bcrypt.hash(password, 10);
+  const id = db.transaction(() => {
+    if (db.prepare('SELECT id FROM users WHERE email = ?').get(normalized)) return null;
+    const isFirst = db.prepare('SELECT COUNT(*) AS c FROM users').get().c === 0;
+    return db
+      .prepare('INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)')
+      .run(name.trim(), normalized, passwordHash, isFirst ? 'admin' : 'user').lastInsertRowid;
+  }).immediate();
+  if (!id) return res.status(409).json({ error: "Bu email allaqachon ro'yxatdan o'tgan" });
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(id);
   res.status(201).json({ token: signToken(user), user: publicUser(user) });
 });
 
