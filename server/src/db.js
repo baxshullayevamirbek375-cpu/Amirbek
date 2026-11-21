@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS messages (
 );
 `);
 
-if (db.prepare('SELECT COUNT(*) AS c FROM products').get().c === 0) {
+if (db.pragma('user_version', { simple: true }) === 0) {
   const insert = db.prepare('INSERT INTO products (name, description, price, image, stock) VALUES (?, ?, ?, ?, ?)');
   const seed = [
     ['Simsiz quloqchin', "Shovqinni bostiruvchi, 30 soat batareya", 450000, '🎧', 25],
@@ -87,8 +87,10 @@ if (db.prepare('SELECT COUNT(*) AS c FROM products').get().c === 0) {
     ['Powerbank 20000mAh', 'Tez quvvatlash, 2 ta USB', 280000, '🔋', 30],
     ['Bluetooth kolonka', 'Suvga chidamli, kuchli bass', 350000, '🔊', 20],
   ];
-  const tx = db.transaction(() => seed.forEach((p) => insert.run(...p)));
-  tx();
+  db.transaction(() => {
+    if (db.prepare('SELECT COUNT(*) AS c FROM products').get().c === 0) seed.forEach((p) => insert.run(...p));
+    db.pragma('user_version = 1');
+  })();
 }
 
 module.exports = db;
