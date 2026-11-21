@@ -4,7 +4,10 @@ import { api, formatMoney } from '../api'
 
 const CATEGORIES = { expense: ['Ovqat', 'Transport', 'Uy-joy', "Ko'ngilochar", "Sog'liq", 'Kiyim', 'Boshqa'], income: ['Maosh', 'Frilans', "Sovg'a", 'Boshqa'] }
 const COLORS = ['#6366f1', '#f59e0b', '#10b981', '#ef4444', '#06b6d4', '#a855f7', '#64748b']
-const today = () => new Date().toISOString().slice(0, 10)
+const today = () => {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 
 export default function Expenses() {
   const [list, setList] = useState([])
