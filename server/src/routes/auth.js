@@ -1,11 +1,20 @@
 const router = require('express').Router();
 const bcrypt = require('bcryptjs');
+const rateLimit = require('express-rate-limit');
 const db = require('../db');
 const { signToken, requireAuth } = require('../auth');
 
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: "Juda ko'p urinish. 15 daqiqadan keyin qayta urinib ko'ring" },
+});
+
 const publicUser = (u) => ({ id: u.id, name: u.name, email: u.email, role: u.role });
 
-router.post('/register', (req, res) => {
+router.post('/register', authLimiter, async (req, res) => {
   const { name, email, password } = req.body || {};
   if (!name?.trim() || !email?.trim() || !password || password.length < 6) {
     return res.status(400).json({ error: "Ism, email va kamida 6 belgili parol kiriting" });
@@ -17,15 +26,15 @@ router.post('/register', (req, res) => {
   const isFirst = db.prepare('SELECT COUNT(*) AS c FROM users').get().c === 0;
   const info = db
     .prepare('INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)')
-    .run(name.trim(), normalized, bcrypt.hashSync(password, 10), isFirst ? 'admin' : 'user');
+    .run(name.trim(), normalized, await bcrypt.hash(password, 10), isFirst ? 'admin' : 'user');
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(info.lastInsertRowid);
   res.status(201).json({ token: signToken(user), user: publicUser(user) });
 });
 
-router.post('/login', (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   const { email, password } = req.body || {};
   const user = db.prepare('SELECT * FROM users WHERE email = ?').get((email || '').trim().toLowerCase());
-  if (!user || !bcrypt.compareSync(password || '', user.password_hash)) {
+  if (!user || !(await bcrypt.compare(password || '', user.password_hash))) {
     return res.status(401).json({ error: "Email yoki parol noto'g'ri" });
   }
   res.json({ token: signToken(user), user: publicUser(user) });
