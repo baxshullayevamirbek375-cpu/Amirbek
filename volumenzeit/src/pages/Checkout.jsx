@@ -167,7 +167,7 @@ export default function Checkout() {
                   <input className="input span2" inputMode="numeric" placeholder="Card Number" autoComplete="cc-number"
                     value={card.number} onChange={(e) => setCard({ ...card, number: digits(e.target.value).slice(0, 19).replace(/(.{4})/g, '$1 ').trim() })} />
                   <input className="input" placeholder="Expiry Date (MM/YY)" autoComplete="cc-exp" value={card.expiry}
-                    onChange={(e) => { const d = digits(e.target.value).slice(0, 4); setCard({ ...card, expiry: d.length > 2 ? `${d.slice(0, 2)}/${d.slice(2)}` : d }) }} />
+                    onChange={(e) => { const full = e.target.value.match(/^\s*(\d{1,2})\s*\/\s*20(\d{2})\s*$/); const d = full ? full[1].padStart(2, '0') + full[2] : digits(e.target.value).slice(0, 4); setCard({ ...card, expiry: d.length > 2 ? `${d.slice(0, 2)}/${d.slice(2)}` : d }) }} />
                   <input className="input" placeholder="CVC / CVV" inputMode="numeric" autoComplete="cc-csc" value={card.cvc}
                     onChange={(e) => setCard({ ...card, cvc: digits(e.target.value).slice(0, 4) })} />
                 </>
