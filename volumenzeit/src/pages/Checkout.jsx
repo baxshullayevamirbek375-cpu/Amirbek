@@ -79,7 +79,7 @@ export default function Checkout() {
   const ship = SHIPPING.find((s) => s.id === shipping)
   const discount = coupon ? Math.round(cartSubtotal * COUPONS[coupon] * 100) / 100 : 0
   const total = cartSubtotal - discount + ship.price
-  const field = (key) => ({ value: info[key], onChange: (e) => setInfo({ ...info, [key]: e.target.value }) })
+  const field = (key) => ({ value: info[key], onChange: (e) => { setInfo({ ...info, [key]: e.target.value }); setMaxStep(1) } })
   const go = (n) => {
     setStep(n)
     setMaxStep((m) => Math.max(m, n))
