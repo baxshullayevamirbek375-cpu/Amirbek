@@ -29,10 +29,16 @@ function usePersisted(key, initial) {
   return [value, setValue]
 }
 
-async function hashPassword(email, password) {
-  const data = new TextEncoder().encode(`${email.toLowerCase()}::${password}`)
-  const digest = await crypto.subtle.digest('SHA-256', data)
-  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('')
+const toHex = (bytes) => [...new Uint8Array(bytes)].map((b) => b.toString(16).padStart(2, '0')).join('')
+
+async function hashPassword(password, salt) {
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits'])
+  const bits = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', hash: 'SHA-256', salt: new TextEncoder().encode(salt), iterations: 210000 },
+    key,
+    256,
+  )
+  return toHex(bits)
 }
 
 export const itemKey = (item) => JSON.stringify([item.name, item.config ?? null, item.strap ?? null, item.extras ?? null])
@@ -81,7 +87,8 @@ export function StoreProvider({ children }) {
     async (form) => {
       const email = form.email.trim().toLowerCase()
       if (users.some((u) => u.email === email)) throw new Error('An account with this email already exists')
-      const passwordHash = await hashPassword(email, form.password)
+      const salt = toHex(crypto.getRandomValues(new Uint8Array(16)))
+      const passwordHash = await hashPassword(form.password, salt)
       const newUser = {
         email,
         firstName: form.firstName.trim(),
@@ -89,6 +96,7 @@ export function StoreProvider({ children }) {
         phone: form.phone.trim(),
         birth: form.birth,
         newsletter: form.newsletter,
+        salt,
         passwordHash,
         createdAt: new Date().toISOString(),
       }
@@ -104,7 +112,7 @@ export function StoreProvider({ children }) {
     async (emailRaw, password) => {
       const email = emailRaw.trim().toLowerCase()
       const found = users.find((u) => u.email === email)
-      if (!found || found.passwordHash !== (await hashPassword(email, password))) throw new Error('Wrong email or password')
+      if (!found || !found.salt || found.passwordHash !== (await hashPassword(password, found.salt))) throw new Error('Wrong email or password')
       setSession(email)
       return found
     },
