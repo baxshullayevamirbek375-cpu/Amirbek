@@ -14,6 +14,18 @@ function usePersisted(key, initial) {
   useEffect(() => {
     localStorage.setItem(key, JSON.stringify(value))
   }, [key, value])
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key !== key || e.storageArea !== localStorage) return
+      try {
+        setValue(e.newValue ? JSON.parse(e.newValue) : initial)
+      } catch {
+        /* ignore malformed value */
+      }
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [key, initial])
   return [value, setValue]
 }
 
