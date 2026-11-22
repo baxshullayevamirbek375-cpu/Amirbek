@@ -48,3 +48,8 @@ server/src
 client/src
   pages/          Dashboard, Kanban, Expenses, Shop, Cart, Orders, Admin, Blog, Post, Chat
 ```
+
+
+## Volumenzeit
+
+A separate watch-store frontend lives in [`volumenzeit/`](volumenzeit/README.md) (`cd volumenzeit && npm install && npm run dev`).
