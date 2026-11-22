@@ -100,6 +100,7 @@ export default function Checkout() {
 
   const pay = (e) => {
     e.preventDefault()
+    if (order) return
     if (method === 'card') {
       const [mm, yy] = card.expiry.split('/').map((x) => Number(x))
       if (digits(card.number).length < 13) return setError('Enter a valid card number')
