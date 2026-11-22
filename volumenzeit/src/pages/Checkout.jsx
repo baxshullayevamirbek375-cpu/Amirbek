@@ -132,7 +132,7 @@ export default function Checkout() {
               <input className="input span2" type="email" placeholder="Email" required {...field('email')} />
               <input className="input span2" placeholder="First Name" required {...field('firstName')} />
               <input className="input span2" placeholder="Last Name" required {...field('lastName')} />
-              <input className="input span2" type="tel" placeholder="Phone Number" required pattern="[0-9+()\s-]{7,}" {...field('phone')} />
+              <input className="input span2" type="tel" placeholder="Phone Number" required pattern="[0-9+\(\)\s\-]{7,}" {...field('phone')} />
               <input className="input span2" placeholder="Address 1" required {...field('address1')} />
               <input className="input span2" placeholder="Address 2" {...field('address2')} />
               <input className="input" placeholder="City" required {...field('city')} />
