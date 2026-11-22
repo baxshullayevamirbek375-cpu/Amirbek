@@ -177,7 +177,7 @@ export default function Checkout() {
               <p className="muted small span2">Demo store: no real payment is processed.</p>
               {error && <p className="form-error span2">{error}</p>}
               <button className="btn btn-primary span2">Complete Payment</button>
-              <p className="muted small span2">By placing your order you agree to our <Link to="/delivery">Terms and Conditions</Link>.</p>
+              <p className="muted small span2">By placing your order you agree to our <Link to="/delivery" target="_blank" rel="noreferrer">Terms and Conditions</Link>.</p>
             </form>
           </Section>
         </div>
