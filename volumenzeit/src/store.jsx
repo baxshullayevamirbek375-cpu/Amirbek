@@ -41,12 +41,28 @@ async function hashPassword(password, salt) {
   return toHex(bits)
 }
 
+const SESSION_KEY = 'vz.session'
+
+function readSession() {
+  try {
+    return JSON.parse(localStorage.getItem(SESSION_KEY) ?? sessionStorage.getItem(SESSION_KEY) ?? 'null')
+  } catch {
+    return null
+  }
+}
+
 export const itemKey = (item) => JSON.stringify([item.name, item.config ?? null, item.strap ?? null, item.extras ?? null])
 
 export function StoreProvider({ children }) {
   const [cart, setCart] = usePersisted('vz.cart', [])
   const [users, setUsers] = usePersisted('vz.users', [])
-  const [session, setSession] = usePersisted('vz.session', null)
+  const [session, setSessionState] = useState(readSession)
+  const setSession = useCallback((email, remember = true) => {
+    localStorage.removeItem(SESSION_KEY)
+    sessionStorage.removeItem(SESSION_KEY)
+    if (email) (remember ? localStorage : sessionStorage).setItem(SESSION_KEY, JSON.stringify(email))
+    setSessionState(email)
+  }, [])
   const [orders, setOrders] = usePersisted('vz.orders', [])
   const [subscribers, setSubscribers] = usePersisted('vz.subscribers', [])
   const [messages, setMessages] = usePersisted('vz.messages', [])
@@ -109,11 +125,11 @@ export function StoreProvider({ children }) {
   )
 
   const login = useCallback(
-    async (emailRaw, password) => {
+    async (emailRaw, password, remember = true) => {
       const email = emailRaw.trim().toLowerCase()
       const found = users.find((u) => u.email === email)
       if (!found || !found.salt || found.passwordHash !== (await hashPassword(password, found.salt))) throw new Error('Wrong email or password')
-      setSession(email)
+      setSession(email, remember)
       return found
     },
     [users, setSession],

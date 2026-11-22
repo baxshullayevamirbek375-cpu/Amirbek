@@ -11,6 +11,7 @@ function LoginForm() {
   const location = useLocation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [remember, setRemember] = useState(true)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -18,7 +19,7 @@ function LoginForm() {
     e.preventDefault()
     setBusy(true)
     try {
-      const u = await login(email, password)
+      const u = await login(email, password, remember)
       notify(`Welcome back, ${u.firstName}!`)
       navigate(location.state?.from ?? '/account')
     } catch (err) {
@@ -35,7 +36,7 @@ function LoginForm() {
       <input className="input" type="email" placeholder="Email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
       <input className="input" type="password" placeholder="Password" required value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
       <div className="auth-row">
-        <label className="check"><input type="checkbox" defaultChecked />Remember me</label>
+        <label className="check"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />Remember me</label>
         <button type="button" className="link-btn" onClick={() => notify('Password reset is not available in the demo store')}>Forgot Password</button>
       </div>
       {error && <p className="form-error center">{error}</p>}
